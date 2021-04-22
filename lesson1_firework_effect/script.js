@@ -25,7 +25,7 @@ canvas.addEventListener('click', function (event) {
 canvas.addEventListener('mousemove', function (event) {
     mouse.x = event.x;
     mouse.y = event.y;
-    for (let i = 0; i < 1; i++) {
+    for (let i = 0; i < 5; i++) {
         particlesArray.push(new Particle());
     }
 });
@@ -67,6 +67,7 @@ function handleParticles() {
                 ctx.moveTo(particlesArray[i].x, particlesArray[i].y);
                 ctx.lineTo(particlesArray[j].x, particlesArray[j].y);
                 ctx.stroke();
+                ctx.closePath()
             }
         }
         if (particlesArray[i].size <= 0.3) {

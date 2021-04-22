@@ -2,13 +2,16 @@ const holes = document.querySelectorAll('.hole');
 const scoreBoard = document.querySelector('.score');
 const moles = document.querySelectorAll('.mole');
 const countdownBoard = document.querySelector('.countdown');
-const startButton = document.querySelector('.start-button');
+const startButton = document.querySelector('.start_button');
+const highScoreBoard = document.querySelector('.high_score');
 
 let lastHole;
 let timeUp = false;
 let timeLimt = 20000;
 let score = 0;
 let countdown;
+let highScore = localStorage.getItem('game1HighScore') || 0;
+highScoreBoard.textContent = `HIGH SCORE: ${highScore}`;
 
 function pickRandomHole(holes) {
     const randomHole = Math.floor(Math.random() * holes.length);
@@ -48,6 +51,7 @@ function startGame() {
         if (countdown < 0) {
             countdown = 0;
             clearInterval(startCountdown);
+            checkHighScore()
             countdownBoard.textContent = 'TIMES UP!! Thank you for protecting our planet!';
         }
     }, 1000);
@@ -65,3 +69,16 @@ function whack(e) {
     scoreBoard.textContent = score;
 }
 moles.forEach(mole => mole.addEventListener('click', whack));
+
+// High score addon
+
+function checkHighScore(){
+    if (score > localStorage.getItem('game1HighScore')){
+        localStorage.setItem('game1HighScore', score);
+        highScore = score;
+        highScoreBoard.textContent = `HIGH SCORE: ${highScore}`;
+    }
+}
+
+
+

@@ -12,6 +12,7 @@ let frame = 0;
 let gameOver = false;
 let score = 0;
 const winningScore = 500;
+let chosenDefender = 1;
 
 const gameGrid = [];
 const defenders = [];
@@ -26,8 +27,15 @@ const mouse = {
     y: 1,
     width: 0.1,
     height: 0.1,
+    clicked: false
 }
 let canvasPosition = canvas.getBoundingClientRect();
+canvas.addEventListener('mousedown', function () {
+    mouse.clicked = true;
+});
+canvas.addEventListener('mouseup', function () {
+    mouse.clicked = false;
+});
 canvas.addEventListener('mousemove', function (e) {
     mouse.x = e.x - canvasPosition.left;
     mouse.y = e.y - canvasPosition.top;
@@ -109,6 +117,11 @@ function handleProjectiles() {
     }
 }
 // defenders
+const defender1 = new Image();
+defender1.src = 'characters/defender1.png';
+const defender2 = new Image();
+defender2.src = 'characters/defender2.png';
+
 class Defender {
     constructor(x, y) {
         this.x = x;
@@ -116,43 +129,64 @@ class Defender {
         this.width = cellSize - cellGap * 2;
         this.height = cellSize - cellGap * 2;
         this.shooting = false;
+        this.shootNow = false;
         this.health = 100;
         this.projectiles = [];
         this.timer = 0;
+        this.frameX = 0;
+        this.frameY = 0;
+        this.spriteWidth = 194;
+        this.spriteHeight = 194;
+        this.minFrame = 0;
+        this.maxFrame = 16;
+        this.chosenDefender = chosenDefender;
     }
     draw() {
-        ctx.fillStyle = 'blue';
-        ctx.fillRect(this.x, this.y, this.width, this.height);
-        ctx.fillStyle = 'gold';
+        // ctx.fillStyle = 'blue';
+        // ctx.fillRect(this.x, this.y, this.width, this.height);
+        ctx.fillStyle = 'black';
         ctx.font = '30px Orbitron';
         ctx.fillText(Math.floor(this.health), this.x + 15, this.y + 30);
+        if (this.chosenDefender === 1) {
+            ctx.drawImage(defender1, this.frameX * this.spriteWidth, 0, this.spriteWidth, this.spriteHeight, this.x, this.y, this.width, this.height);
+        } else if (this.chosenDefender === 2) {
+            ctx.drawImage(defender2, this.frameX * this.spriteWidth, 0, this.spriteWidth, this.spriteHeight, this.x, this.y, this.width, this.height);
+        }
     }
     update() {
-        if (this.shooting) {
-            this.timer++;
-            if (this.timer % 100 === 0) {
-                projectiles.push(new Projectiles(this.x + 70, this.y + 50));
+        if (frame % 6 === 0) {
+            if (this.frameX < this.maxFrame) {
+                this.frameX++;
+            } else {
+                this.frameX = this.minFrame;
             }
-        } else {
-            this.timer = 0;
+            if (this.frameX === 15) {
+                this.shootNow = true;
+            }
+        }
+        if (this.chosenDefender === 1) {
+            if (this.shooting) {
+                this.minFrame = 0;
+                this.maxFrame = 16;
+            } else {
+                this.minFrame = 17;
+                this.maxFrame = 24;
+            }
+        } else if (this.chosenDefender === 2) {
+            if (this.shooting) {
+                this.minFrame = 13;
+                this.maxFrame = 29;
+            } else {
+                this.minFrame = 0;
+                this.maxFrame = 12;
+            }
+        }
+        if (this.shooting && this.shootNow) {
+            projectiles.push(new Projectiles(this.x + 70, this.y + 35));
+            this.shootNow = false;
         }
     }
 }
-canvas.addEventListener('click', function (e) {
-    const gridPositionX = mouse.x - (mouse.x % cellSize) + cellGap;
-    const gridPositionY = mouse.y - (mouse.y % cellSize) + cellGap;
-    if (gridPositionY < cellSize) return;
-    for (let i = 0; i < defenders.length; i++) {
-        if (defenders[i].x === gridPositionX && defenders[i].y === gridPositionY) {
-            return;
-        }
-    }
-    let defenderCost = 100;
-    if (numberOfResources >= defenderCost) {
-        defenders.push(new Defender(gridPositionX, gridPositionY));
-        numberOfResources -= defenderCost;
-    }
-});
 function handleDefender() {
     for (let i = 0; i < defenders.length; i++) {
         defenders[i].draw();
@@ -175,7 +209,96 @@ function handleDefender() {
         }
     }
 }
+
+const card1 = {
+    x: 10,
+    y: 10,
+    width: 70,
+    height: 85
+}
+const card2 = {
+    x: 90,
+    y: 10,
+    width: 70,
+    height: 85
+}
+
+function chooseDefender() {
+    let card1stroke = 'black'
+    let card2stroke = 'black'
+    if (collision(card1, mouse) && mouse.clicked) {
+        chosenDefender = 1;
+    } else if (collision(card2, mouse) && mouse.clicked) {
+        chosenDefender = 2;
+    }
+    if (chosenDefender === 1) {
+        card1stroke = 'gold'
+        card2stroke = 'black'
+    } else if (chosenDefender === 2) {
+        card1stroke = 'black'
+        card2stroke = 'gold'
+    } else {
+        card1stroke = 'black'
+        card2stroke = 'black'
+    }
+
+    ctx.lineWidth = 1;
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.fillRect(card1.x, card1.y, card1.width, card1.height);
+    ctx.strokeStyle = card1stroke;
+    ctx.strokeRect(card1.x, card1.y, card1.width, card1.height);
+    ctx.drawImage(defender1, 0, 0, 194, 194, 0, 5, 194 / 2, 194 / 2);
+    ctx.fillRect(card2.x, card2.y, card2.width, card2.height);
+    ctx.strokeStyle = card2stroke;
+    ctx.strokeRect(card2.x, card2.y, card2.width, card2.height);
+    ctx.drawImage(defender2, 0, 0, 194, 194, 80, 5, 194 / 2, 194 / 2);
+}
+
+// floating messages
+const floatingMessages = [];
+class FloatingMessages {
+    constructor(value, x, y, size, color) {
+        this.value = value;
+        this.x = x;
+        this.y = y;
+        this.size = size;
+        this.lifespan = 0;
+        this.color = color;
+        this.opacity = 1;
+    }
+    update() {
+        this.y -= 0.3;
+        this.lifespan += 1;
+        if (this.opacity > 0.03) this.opacity -= 0.03;
+    }
+    draw() {
+        ctx.globalAlpha = this.opacity;
+        ctx.fillStyle = this.color;
+        ctx.font = this.size + 'px Orbitron';
+        ctx.fillText(this.value, this.x, this.y);
+        ctx.globalAlpha = 1;
+    }
+}
+function handleFloatingMessages() {
+    for (let i = 0; i < floatingMessages.length; i++) {
+        floatingMessages[i].update();
+        floatingMessages[i].draw();
+        if (floatingMessages[i].lifespan >= 50) {
+            floatingMessages.splice(i, 1);
+            i--;
+        }
+    }
+}
+
 // enemies
+const enemyTypes = [];
+const enemy1 = new Image();
+enemy1.src = 'characters/enemy1.png';
+enemyTypes.push(enemy1);
+const enemy2 = new Image();
+enemy2.src = 'characters/enemy2.png';
+enemyTypes.push(enemy2);
+
 class Enemy {
     constructor(verticalPosition) {
         this.x = canvas.width;
@@ -186,16 +309,33 @@ class Enemy {
         this.movment = this.speed;
         this.health = 100;
         this.maxHealth = this.health;
+        this.enemyType = enemyTypes[Math.floor(Math.random() * enemyTypes.length)];
+        this.frameX = 0;
+        this.frameY = 0;
+        this.minFrame = 0;
+        if (this.enemyType === enemy1){
+            this.maxFrame = 4;
+        } else if (this.enemyType === enemy2){
+            this.maxFrame = 7;
+        }
+        this.spriteWidth = 256;
+        this.spriteHeight = 256;
     }
     update() {
         this.x -= this.movment;
+        if (frame % 10 === 0) {
+            if (this.frameX < this.maxFrame) {
+                this.frameX++;
+            } else this.frameX = this.minFrame;
+        }
     }
     draw() {
-        ctx.fillStyle = 'red';
-        ctx.fillRect(this.x, this.y, this.width, this.height);
+        // ctx.fillStyle = 'red';
+        // ctx.fillRect(this.x, this.y, this.width, this.height);
         ctx.fillStyle = 'black';
         ctx.font = '30px Orbitron';
         ctx.fillText(Math.floor(this.health), this.x + 15, this.y + 30);
+        ctx.drawImage(this.enemyType, this.frameX * this.spriteWidth, this.frameY * this.spriteHeight, this.spriteWidth, this.spriteHeight, this.x, this.y, this.width, this.height);
     }
 }
 function handleEnemies() {
@@ -207,6 +347,8 @@ function handleEnemies() {
         }
         if (enemies[i].health <= 0) {
             let gainedResources = enemies[i].maxHealth / 10;
+            floatingMessages.push(new FloatingMessages('+' + gainedResources, enemies[i].x, enemies[i].y, 30, 'black'));
+            floatingMessages.push(new FloatingMessages('+' + gainedResources, 470, 85, 30, 'gold'));
             numberOfResources += gainedResources;
             score += gainedResources;
             const findThisIndex = enemyPosition.indexOf(enemies[i].y);
@@ -248,6 +390,8 @@ function handleResources() {
         resources[i].draw();
         if (resources[i] && mouse.x && mouse.y && collision(resources[i], mouse)) {
             numberOfResources += resources[i].amount;
+            floatingMessages.push(new FloatingMessages('+' + resources[i].amount, resources[i].x, resources[i].y, 30, 'black'));
+            floatingMessages.push(new FloatingMessages('+' + resources[i].amount, 470, 85, 30, 'gold'));
             resources.splice(i, 1);
             i--;
         }
@@ -257,8 +401,8 @@ function handleResources() {
 function handleGameStatus() {
     ctx.fillStyle = 'gold';
     ctx.font = '30px Orbitron';
-    ctx.fillText(`Score: ${score}`, 20, 40);
-    ctx.fillText(`Resources: ${numberOfResources}`, 20, 80);
+    ctx.fillText(`Score: ${score}`, 180, 40);
+    ctx.fillText(`Resources: ${numberOfResources}`, 180, 80);
     if (gameOver) {
         ctx.fillStyle = 'black';
         ctx.font = '90px Orbitron';
@@ -269,9 +413,27 @@ function handleGameStatus() {
         ctx.font = '60px Orbitron';
         ctx.fillText('LEVEL COMPLETE', 130, 300);
         ctx.font = '30px Orbitron';
-        ctx.fillText(`You win with ${score} points!`, 134, 340); 
+        ctx.fillText(`You win with ${score} points!`, 134, 340);
     }
 }
+
+canvas.addEventListener('click', function (e) {
+    const gridPositionX = mouse.x - (mouse.x % cellSize) + cellGap;
+    const gridPositionY = mouse.y - (mouse.y % cellSize) + cellGap;
+    if (gridPositionY < cellSize) return;
+    for (let i = 0; i < defenders.length; i++) {
+        if (defenders[i].x === gridPositionX && defenders[i].y === gridPositionY) {
+            return;
+        }
+    }
+    let defenderCost = 100;
+    if (numberOfResources >= defenderCost) {
+        defenders.push(new Defender(gridPositionX, gridPositionY));
+        numberOfResources -= defenderCost;
+    } else {
+        floatingMessages.push(new FloatingMessages('Need more resources', mouse.x, mouse.y, 20, 'blue'));
+    }
+});
 
 function animate() {
     ctx.clearRect(0, 0, canvas.width, canvas.height)
@@ -279,10 +441,12 @@ function animate() {
     ctx.fillRect(0, 0, controlsBar.width, controlsBar.height);
     handleGameGrid();
     handleDefender();
-    handleResources()
+    handleResources();
     handleProjectiles();
     handleEnemies();
+    chooseDefender();
     handleGameStatus();
+    handleFloatingMessages();
     frame++;
     if (!gameOver) requestAnimationFrame(animate);
 }
@@ -298,6 +462,7 @@ function collision(first, second) {
     };
 };
 
-window.addEventListener('resize', function(){
+
+window.addEventListener('resize', function () {
     canvasPosition = canvas.getBoundingClientRect();
 })

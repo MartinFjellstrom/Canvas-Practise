@@ -2,9 +2,9 @@ const obstaclesArray = [];
 
 class Obstacle {
     constructor() {
-        this.top = (Math.random() * canvas.height / 3) + 20;
-        this.bottom = (Math.random() * canvas.height / 3) + 20;
-        this.x = canvas.clientWidth;
+        this.top = (Math.random() * canvas.height / 4) + 60;
+        this.bottom = (Math.random() * canvas.height / 4) + 60;
+        this.x = canvas.width;
         this.width = 20;
         this.color = `hsla(${hue}, 100%, 50%, 1)`;
         this.counted = false;
@@ -25,13 +25,13 @@ class Obstacle {
 }
 
 function handleObstacles() {
-    if (frame % 150 === 0) {
-        obstaclesArray.unshift(new Obstacle);
+    if (frame % 60 === 0) {
+        obstaclesArray.push(new Obstacle);
     }
     for (let i = 0; i < obstaclesArray.length; i++){
         obstaclesArray[i].update();
-    }
-    if (obstaclesArray.length > 20){
-        obstaclesArray.pop(obstaclesArray[0]);
+        if (obstaclesArray.length > 20){
+            obstaclesArray.slice(obstaclesArray[i]);
+        }
     }
 }

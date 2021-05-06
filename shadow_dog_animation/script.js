@@ -80,7 +80,11 @@ function animate() {
     gameFrame++;
     requestAnimationFrame(animate);
 }
-animate()
+
+setInterval(function(){
+    animate()
+},1000/30)
+
 
 
 
